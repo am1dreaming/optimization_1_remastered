@@ -18,8 +18,6 @@ static int search(int k, long long sum)
     return 0;
 }
 
-static long long labs_ll(long long x) { return x < 0 ? -x : x; }
-
 static int solve_core(void)
 {
     long long w[26] = {0};
@@ -27,13 +25,6 @@ static int solve_core(void)
         long long p = i == nwords - 1 ? -1 : 1;
         for (int j = (int)strlen(words[i]) - 1; j >= 0; j--, p *= 10)
             w[words[i][j] - 'A'] += p;
-    }
-    for (int k = 0; k < nletters; k++) {
-        char c = letters[k];
-        int j = k;
-        for (; j > 0 && labs_ll(w[letters[j - 1] - 'A']) < labs_ll(w[c - 'A']); j--)
-            letters[j] = letters[j - 1];
-        letters[j] = c;
     }
     pos_rest[nletters] = neg_rest[nletters] = 0;
     for (int k = nletters - 1; k >= 0; k--) {
