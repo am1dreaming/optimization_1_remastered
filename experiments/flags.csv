@@ -1,0 +1,16 @@
+version,flags,median_total_ms
+v0_baseline,-O0,414.668476
+v0_baseline,-O1,205.606393
+v0_baseline,-O2,200.32111
+v0_baseline,-O3,200.708999
+v0_baseline,-O3 -march=native,196.831266
+v3_order,-O0,0.336116
+v3_order,-O1,0.175257
+v3_order,-O2,0.181401
+v3_order,-O3,0.177786
+v3_order,-O3 -march=native,0.176559
+v6_bitmask,-O0,0.622108
+v6_bitmask,-O1,0.311083
+v6_bitmask,-O2,0.285503
+v6_bitmask,-O3,0.272489
+v6_bitmask,-O3 -march=native,0.283373
