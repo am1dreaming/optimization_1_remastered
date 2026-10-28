@@ -1,0 +1,11 @@
+build/
+build-*/
+results.csv
+gmon.out
+*.exe
+*.pdb
+*.o
+experiments/bin/
+.venv/
+.idea/
+cmake-build-*/
