@@ -1,3 +1,6 @@
+# Две вариации запуска и последующие проверки:
+#    Встроенный cmake clion (возможны ошибки)
+#    Доп. установленный но создается отдельная папка bulid в этом случае стоит учитывать путь
 cmake_minimum_required(VERSION 3.10)
 project(rebus C)
 
@@ -18,7 +21,7 @@ endif()
 
 # Профилирование через gprof: cmake -DREBUS_PROFILE=ON (только gcc, Linux/MinGW)
 option(REBUS_PROFILE "Build with -pg for gprof" OFF)
-
+# полный сет версий (Clion может стереть в случае обновления cmake)
 set(VERSIONS
     v0_baseline # полный перебор, сумма считается заново на каждом листе
     v1_coeffs # весовые коэффициенты букв (машинно-независимая)
