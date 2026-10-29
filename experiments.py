@@ -1,3 +1,5 @@
+# python3 bench.py build -> если через Cmake
+# python3 bench.py cmake-build-release -> если профиля нет то -debug вместо release
 import csv
 import math
 import os
@@ -16,13 +18,25 @@ PLOTS = os.path.join(HERE, "plots")
 BIN = os.path.join(OUT, "bin")
 EXE = ".exe" if os.name == "nt" else ""
 
-VERSIONS = ["v0_baseline", "v1_coeffs", "v2_incremental", "v3_bounds",
-            "v3_order", "v4_columns", "v5_forced", "v6_bitmask"]
-SHORT = {"v0_baseline": "v0", "v1_coeffs": "v1", "v2_incremental": "v2",
-         "v3_bounds": "v3a", "v3_order": "v3b", "v4_columns": "v4",
-         "v5_forced": "v5", "v6_bitmask": "v6"}
+VERSIONS = ["v0_baseline",
+            "v1_coeffs",
+            "v2_incremental",
+            "v3_bounds",
+            "v3_order",
+            "v4_columns",
+            "v5_forced",
+            "v6_bitmask"]
 
-# Палитра: фиксированный порядок категориальных цветов, нейтральные тексты
+SHORT = {"v0_baseline": "v0",
+         "v1_coeffs": "v1",
+         "v2_incremental": "v2",
+         "v3_bounds": "v3a",
+         "v3_order": "v3b",
+         "v4_columns": "v4",
+         "v5_forced": "v5",
+         "v6_bitmask": "v6"}
+
+# >>>> Палитра <<<<
 CAT = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948"]
 BLUE = CAT[0]
 INK, MUTED, GRID, NEUTRAL = "#1f1f1e", "#6b6a63", "#e4e3dc", "#9a998f"
@@ -30,7 +44,7 @@ INK, MUTED, GRID, NEUTRAL = "#1f1f1e", "#6b6a63", "#e4e3dc", "#9a998f"
 QUICK = "--quick" in sys.argv
 
 
-# ---------------------------------------------------------------- сборка и запуск
+# >>>> сборка и запуск <<<<
 
 def compiler():
     cc = os.environ.get("CC")
@@ -48,9 +62,8 @@ def build(version, flags, tag):
     r = subprocess.run(cmd, capture_output=True, text=True)
     return out if r.returncode == 0 else None
 
-
 def run(exe, puzzles, min_ms):
-    """Запуск в режиме бенчмарка; возвращает список (ребус, мс, узлы, ok)."""
+    """Запуск в режиме бенчмарка; возвращает список (ребус, мс, узлы, ok)"""
     with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False, encoding="utf-8") as f:
         f.write("\n".join(puzzles) + "\n")
         name = f.name
@@ -78,7 +91,7 @@ def build_all(flags=("-O2",), tag="O2"):
 
 
 def standard_tests():
-    """Встроенные тесты из rebus.h (программа без аргументов решает именно их)."""
+    """Встроенные тесты из rebus.h"""
     src = open(os.path.join(HERE, "rebus.h"), encoding="utf-8").read()
     block = src[src.index("tests[] = {"):src.index("};", src.index("tests[] = {"))]
     return [line.strip().strip('",') for line in block.splitlines()[1:] if '"' in line]
@@ -91,17 +104,12 @@ def write_csv(name, header, rows):
         w.writerows(rows)
 
 
-# ---------------------------------------------------------------- генератор ребусов
+# генератор ребусов
 
 LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 
 def make_puzzle(rng, n_letters=None, addends=(2, 7), max_len=7):
-    """
-    Случайный ребус с гарантированным решением: берём случайные числа без ведущих
-    нулей, складываем и заменяем каждую цифру своей буквой. Если n_letters задано,
-    в ребусе ровно столько разных букв.
-    """
     for _ in range(200000):
         k = rng.randint(*addends)
         top = rng.randint(1, max_len)
@@ -122,7 +130,7 @@ def make_puzzle(rng, n_letters=None, addends=(2, 7), max_len=7):
     raise RuntimeError(f"не удалось сгенерировать ребус с {n_letters} буквами")
 
 
-# ---------------------------------------------------------------- графики
+# графики
 
 def plt_setup():
     import matplotlib
@@ -159,10 +167,10 @@ def save(fig, name):
     print(f"    [+] plots/{name}")
 
 
-# ---------------------------------------------------------------- 1. сложность
+# >>>> 1. сложность <<<<
 
 def tree_size(n):
-    """Число узлов полного дерева перебора: сумма размещений A(10, k), k = 0..n."""
+    """Число узлов полного дерева перебора, именно сумма размещений A(10, k), k = 0..n"""
     return sum(math.perm(10, k) for k in range(n + 1))
 
 
@@ -174,8 +182,10 @@ def exp_complexity(exes):
     puzzles = {n: [make_puzzle(rng, n, addends=(2, 4), max_len=6) for _ in range(per_n)] for n in ns}
 
     # v1 и v2 обходят то же дерево, что и v0; v6 - то же, что v5 (меняется только цена узла)
-    shown = [("v0_baseline", "v0–v2: полный перебор"), ("v3_bounds", "v3a: границы"),
-             ("v3_order", "v3b: + порядок букв"), ("v4_columns", "v4: столбцы"),
+    shown = [("v0_baseline", "v0–v2: полный перебор"),
+             ("v3_bounds", "v3a: границы"),
+             ("v3_order", "v3b: + порядок букв"),
+             ("v4_columns", "v4: столбцы"),
              ("v5_forced", "v5–v6: вычисление цифры")]
     rows, mean_nodes = [], {}
     for v, _ in shown:
@@ -184,7 +194,7 @@ def exp_complexity(exes):
             res = run(exes[v], puzzles[n], 0)
             assert all(ok for *_, ok in res), f"{v}: неверный ответ"
             nodes = [r[2] for r in res]
-            mean_nodes[v].append(statistics.geometric_mean(nodes))  # не тянется вверх выбросами
+            mean_nodes[v].append(statistics.geometric_mean(nodes))
             rows += [(v, n, q, nd) for (q, _, nd, _) in res]
     write_csv("complexity.csv", ["version", "letters", "puzzle", "nodes"], rows)
 
@@ -210,7 +220,7 @@ def exp_complexity(exes):
     print("    v0 / теория:", [f"{a / tree_size(n):.2f}" for a, n in zip(v0, ns)])
 
 
-# ---------------------------------------------------------------- 2. случайные ребусы
+# >>>> 2. случайные ребусы <<<<
 
 def exp_random(exes):
     count = 60 if QUICK else 300
@@ -248,13 +258,13 @@ def exp_random(exes):
     ax.set_ylabel("мс на ребус (лог. шкала)", color=MUTED, fontsize=9)
     ok_all = all(f == 0 for f in fails.values())
     title(ax, f"Время на {len(puzzles)} случайных ребусах (2–7 слагаемых)"
-              + (" — все ответы верны" if ok_all else " — ЕСТЬ ОШИБКИ"))
+              + (" — все ответы верны" if ok_all else " — ЕСТЬ ОШИБКИ!!!!"))
     style(ax)
     save(fig, "random_boxplot.png")
     plt.close(fig)
 
 
-# ---------------------------------------------------------------- 3. повторные замеры
+# >>>> 3. повторные замеры <<<<
 
 def system_info():
     cc = compiler()
@@ -353,10 +363,10 @@ def exp_repeats(exes):
     plt.close(fig)
 
 
-# ---------------------------------------------------------------- 4. флаги компилятора
+# >>>> 4. флаги компилятора <<<<
 
 def native_flag():
-    """-march=native там, где он поддерживается (Apple clang на arm64 понимает -mcpu=native)."""
+    """-march=native там, где он поддерживается (Apple clang на arm64 понимает -mcpu=native)"""
     probe = os.path.join(BIN, "probe" + EXE)
     src = os.path.join(HERE, "v0_baseline.c")
     for f in (["-march=native"], ["-mcpu=native"]):
@@ -374,7 +384,8 @@ def exp_flags():
     nf = native_flag()
     if nf:
         configs.append(("-O3 " + nf[0], ["-O3", *nf]))
-    versions = [("v0_baseline", "v0 полный перебор"), ("v3_order", "v3b порядок букв"),
+    versions = [("v0_baseline", "v0 полный перебор"),
+                ("v3_order", "v3b порядок букв"),
                 ("v6_bitmask", "v6 итоговая")]
     tests = standard_tests()
     reps = 2 if QUICK else 5
@@ -413,13 +424,13 @@ def exp_flags():
     plt.close(fig)
 
 
-# ---------------------------------------------------------------- main
+# >>>> main 0_0 <<<<
 
 def main():
     chosen = {a for a in sys.argv[1:] if a.isdigit()} or {"1", "2", "3", "4"}
     os.makedirs(OUT, exist_ok=True)
     try:
-        import matplotlib  # noqa: F401
+        import matplotlib
     except ImportError:
         sys.exit("Нужен matplotlib: pip install matplotlib")
     print(f"Компилятор: {compiler()}" + ("   (быстрый режим)" if QUICK else ""))
